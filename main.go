@@ -1,40 +1,29 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	sqlc "github.com/Chengxufeng1994/simple-bank/db/sqlc"
-	"log"
-
+	"github.com/Chengxufeng1994/simple-bank/api"
+	db "github.com/Chengxufeng1994/simple-bank/db/sqlc"
 	_ "github.com/lib/pq"
 )
 
+const (
+	dbDriverName   = "postgres"
+	dataSourceName = "postgresql://postgres:postgres@localhost:5432/simple_bank?sslmode=disable"
+	srvAddr        = "localhost:8080"
+)
+
 func main() {
-	ctx := context.Background()
-	db, err := sql.Open("postgres", "user=postgres password=postgres dbname=simple_bank sslmode=disable")
+	conn, err := sql.Open(dbDriverName, dataSourceName)
 	if err != nil {
 		panic(err)
 	}
 
-	queries := sqlc.New(db)
-	createAccountParams := sqlc.CreateAccountParams{
-		Owner:    "test",
-		Balance:  1000,
-		Currency: "USD",
-	}
-	account, err := queries.CreateAccount(ctx, createAccountParams)
-	if err != nil {
-		panic(err)
-	}
-	log.Println(account)
+	store := db.NewStore(conn)
+	srv := api.NewServer(store)
 
-	listAccountParams := sqlc.ListAccountsParams{
-		Limit:  10,
-		Offset: 0,
-	}
-	accounts, err := queries.ListAccounts(ctx, listAccountParams)
+	err = srv.Start(srvAddr)
 	if err != nil {
 		panic(err)
 	}
-	log.Println(accounts)
 }

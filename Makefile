@@ -26,6 +26,9 @@ sqlc:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres createdb dropdb migrate_up migrate_down migrate_version
+server:
+	go run main.go
+
+.PHONY: postgres createdb dropdb migrate_up migrate_down migrate_version server
 
 SHELL = /bin/sh
