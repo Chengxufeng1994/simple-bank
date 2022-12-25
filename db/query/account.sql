@@ -13,8 +13,7 @@ LIMIT 1;
 SELECT *
 FROM accounts
 WHERE id = $1
-LIMIT 1
-FOR NO KEY UPDATE ;
+LIMIT 1 FOR NO KEY UPDATE;
 
 -- name: ListAccounts :many
 SELECT *
