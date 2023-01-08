@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:12-alpine
+    container_name: postgres
+    hostname: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=simple_bank
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: simple-bank-api
+    container_name: api
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+    entrypoint: [ "/usr/app/wait-for.sh", "postgres:5432", "--", "/usr/app/start.sh" ]
+    command: [ "/usr/app/main" ]
+    environment:
+      - GIN_MODE=release
+      - DB_DRIVER=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=simple_bank
