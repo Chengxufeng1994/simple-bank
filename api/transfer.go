@@ -2,8 +2,10 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	db "github.com/Chengxufeng1994/simple-bank/db/sqlc"
+	"github.com/Chengxufeng1994/simple-bank/token"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -15,25 +17,25 @@ type transferRequest struct {
 	Currency      string `json:"currency" binding:"required,currency"`
 }
 
-func (srv *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
+func (srv *Server) validAccount(ctx *gin.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := srv.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return false
+			return account, false
 		}
 
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return false
+		return account, false
 	}
 
 	if account.Currency != currency {
 		err := fmt.Errorf("account [%d] currency mismatch: %s vs %s", account.ID, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return false
+		return account, false
 	}
 
-	return true
+	return account, true
 }
 
 func (srv *Server) createTransfer(ctx *gin.Context) {
@@ -43,11 +45,19 @@ func (srv *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !srv.validAccount(ctx, req.FromAccountID, req.Currency) {
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	fromAccount, valid := srv.validAccount(ctx, req.FromAccountID, req.Currency)
+	if fromAccount.Owner != authPayload.Username {
+		err := errors.New("from account doesn't belong to authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+	if !valid {
 		return
 	}
 
-	if !srv.validAccount(ctx, req.ToAccountID, req.Currency) {
+	_, valid = srv.validAccount(ctx, req.ToAccountID, req.Currency)
+	if !valid {
 		return
 	}
 
