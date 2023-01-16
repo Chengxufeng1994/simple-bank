@@ -32,6 +32,12 @@ server:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/Chengxufeng1994/simple-bank/db/sqlc Store
 
-.PHONY: postgres createdb dropdb migrate_up migrate_down migrate_version sqlc mock test server
+db_docs:
+	npm run db_docs
+
+db_schema:
+	npm run db_schema
+
+.PHONY: postgres createdb dropdb migrate_up migrate_down migrate_version sqlc mock test server db_docs db_schema
 
 SHELL = /bin/sh

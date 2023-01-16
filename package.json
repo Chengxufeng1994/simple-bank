@@ -1,0 +1,26 @@
+{
+  "name": "simple-bank",
+  "version": "1.0.0",
+  "description": "## How to generate code",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db_docs": "dbdocs build doc/db.dbml",
+    "db_schema": "dbml2sql --postgres -o doc/schema.sql doc/db.dbml"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Chengxufeng1994/simple-bank.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Chengxufeng1994/simple-bank/issues"
+  },
+  "homepage": "https://github.com/Chengxufeng1994/simple-bank#readme",
+  "dependencies": {
+    "@dbml/cli": "^2.4.4",
+    "dbdocs": "^0.7.3"
+  }
+}
