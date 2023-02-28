@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
-	authPayload, err := server.authorizeUser(ctx)
+func (srv *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserResponse, error) {
+	authPayload, err := srv.authorizeUser(ctx)
 	if err != nil {
 		return nil, unauthenticatedError(err)
 	}
@@ -57,7 +57,7 @@ func (server *Server) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 		}
 	}
 
-	user, err := server.store.UpdateUser(ctx, arg)
+	user, err := srv.store.UpdateUser(ctx, arg)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, status.Errorf(codes.NotFound, "user not found")

@@ -2,6 +2,7 @@ package gapi
 
 import (
 	"context"
+	"database/sql"
 	db "github.com/Chengxufeng1994/simple-bank/db/sqlc"
 	"github.com/Chengxufeng1994/simple-bank/pb"
 	"github.com/Chengxufeng1994/simple-bank/util"
@@ -12,28 +13,29 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (srv *Server) LoginUser(ctx context.Context, in *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
-	violations := validateLoginUserRequest(in)
+func (srv *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
+	violations := validateLoginUserRequest(req)
 	if violations != nil {
 		return nil, invalidArgumentError(violations)
 	}
 
-	hashedPassword, err := util.HashPassword(in.Password)
+	user, err := srv.store.GetUser(ctx, req.GetUsername())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to hash password: %s", err)
+		if err == sql.ErrNoRows {
+			return nil, status.Errorf(codes.NotFound, "user not found")
+		}
+		return nil, status.Errorf(codes.Internal, "failed to find user")
 	}
 
-	user, err := srv.store.GetUser(ctx, in.Username)
+	err = util.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to login user: %s", err)
+		return nil, status.Errorf(codes.NotFound, "incorrect password")
 	}
 
-	err = util.CheckPassword(in.Password, hashedPassword)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "failed to login user: %s", err)
-	}
-
-	accessToken, accessPayload, err := srv.tokenMaker.CreateToken(user.Username, srv.config.AccessTokenDuration)
+	accessToken, accessPayload, err := srv.tokenMaker.CreateToken(
+		user.Username,
+		srv.config.AccessTokenDuration,
+	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create access token")
 	}
