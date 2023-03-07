@@ -5,6 +5,9 @@ POSTGRES_URL ?= postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@localhost:5432/
 postgres:
 	docker run --name postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 --restart=always postgres:12.11
 
+redis:
+	docker run --name redis -d -p 6379:6379 --restart=always redis:7-alpine
+
 createdb:
 	docker exec -it postgres createdb --username=postgres --owner=postgres simple_bank
 

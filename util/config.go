@@ -2,9 +2,10 @@ package util
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"time"
 )
 
 type Config struct {
@@ -15,6 +16,8 @@ type Config struct {
 	PostgresUser     string `mapstructure:"POSTGRES_USER"`
 	PostgresPassword string `mapstructure:"POSTGRES_PASSWORD"`
 	PostgresDB       string `mapstructure:"POSTGRES_DATABASE"`
+	RedisHost        string `mapstructure:"REDIS_HOST"`
+	RedisPort        int32  `mapstructure:"REDIS_PORT"`
 
 	ServerHost string `mapstructure:"SERVER_HOST"`
 	ServerPort int32  `mapstructure:"SERVER_PORT"`
