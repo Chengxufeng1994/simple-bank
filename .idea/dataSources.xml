@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/simple_bank</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="feathers-chat.sqlite" uuid="e649a280-a7f7-4462-9017-d95e292c11c1">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$USER_HOME$/SideProject/feathers-chat/feathers-chat.sqlite</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

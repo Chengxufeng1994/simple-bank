@@ -2,6 +2,11 @@ package gapi
 
 import (
 	"context"
+	"time"
+
+	"github.com/hibiken/asynq"
+
+	"github.com/Chengxufeng1994/simple-bank/worker"
 
 	db "github.com/Chengxufeng1994/simple-bank/db/sqlc"
 	"github.com/Chengxufeng1994/simple-bank/pb"
@@ -24,14 +29,28 @@ func (srv *Server) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (*p
 		return nil, status.Errorf(codes.Internal, "failed to hash password: %s", err)
 	}
 
-	arg := db.CreateUserParams{
-		Username:       in.Username,
-		HashedPassword: hashedPassword,
-		FullName:       in.FullName,
-		Email:          in.Email,
+	arg := db.CreateUserTxParams{
+		CreateUserParams: db.CreateUserParams{
+			Username:       in.Username,
+			HashedPassword: hashedPassword,
+			FullName:       in.FullName,
+			Email:          in.Email,
+		},
+		AfterCreate: func(user db.User) error {
+			taskPayload := &worker.SendVerifyEmailPayload{
+				Username: user.Username,
+			}
+			opts := []asynq.Option{
+				asynq.MaxRetry(10),
+				asynq.ProcessIn(10 * time.Second),
+				asynq.Queue(worker.QueueCritical),
+			}
+
+			return srv.taskDistributor.DistributeTaskSendVerifyEmail(ctx, taskPayload, opts...)
+		},
 	}
 
-	user, err := srv.store.CreateUser(ctx, arg)
+	txResult, err := srv.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -43,7 +62,7 @@ func (srv *Server) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (*p
 	}
 
 	rsp := &pb.CreateUserResponse{
-		User: convertUser(user),
+		User: convertUser(txResult.User),
 	}
 	return rsp, nil
 }
